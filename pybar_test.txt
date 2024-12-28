@@ -1,0 +1,41 @@
+# Get a compiler
+from pybars import Compiler
+compiler = Compiler()
+
+# Compile the template
+source = u"{{>header}}{{#list people}}{{firstName}} {{lastName}}{{/list}}"
+template = compiler.compile(source)
+
+print("template =", template)
+
+# Add any special helpers
+def _list(this, options, items):
+    result = [u'<ul>']
+    for thing in items:
+        result.append(u'<li>')
+        result.extend(options['fn'](thing))
+        result.append(u'</li>')
+    result.append(u'</ul>')
+    return result
+helpers = {'list': _list}
+
+# Add partials
+header = compiler.compile(u'<h1>{{header1}}</h1>')
+partials = {'header': header}
+i = {
+    'people': [
+        {'firstName': "Yehuda", 'lastName': "Katz"},
+        {'firstName': "Carl", 'lastName': "Lerche"},
+        {'firstName': "Alan", 'lastName': "Johnson"}
+    ],
+    'header1': 'Myheader'
+    }
+# Render the template
+output = template(i, helpers=helpers, partials=partials)
+
+print(output)
+
+c1 = Compiler()
+t = c1.template(source, partials=partials)
+print("t = ", t)
+print(t(i))
