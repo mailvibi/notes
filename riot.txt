@@ -79,6 +79,17 @@ make -j16 O=${RIOT_BUILD_DIR} bzImage
 #make -j16 O=${RIOT_BUILD_DIR} uImage
 make -j16 O=${RIOT_BUILD_DIR} dtbs
 
+
+
+cd  ${RIOT_BUILD_DIR}
+mkdir ${TMP_MMC_MNT_DIR}
+sudo mount ${MMC_DEVICE} ${TMP_MMC_MNT_DIR}
+sudo cp arch/arm/boot/dts/nxp/imx/imx6dl-riotboard.dtb ${TMP_MMC_MNT_DIR}/boot/
+sudo cp arch/arm/boot/zImage ${TMP_MMC_MNT_DIR}/boot/
+sync
+sudo umount ${MMC_DEVICE}
+rm -rf ${TMP_MMC_MNT_DIR}
+
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## RFS :
 sudo /dev/mmcblkop2 ./mnt 
