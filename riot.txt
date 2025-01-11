@@ -1,0 +1,105 @@
+RIOT BOARD SETUP
+
+export ARCH=arm
+export CROSS_COMPILE=arm-linux-gnueabihf-
+export PATH=$PATH:/home/vibi/work/crosscompiler/gcc-linaro-6.3.1-2017.02-x86_64_arm-linux-gnueabihf
+
+## U-BOOT COMPILATION
+make riotboard_defconfig 
+make u-boot.imx
+
+dd if=u-boot.imx of=sdcard.img bs=512 seek=2 conv=notrunc  
+dd if=u-boot.imx of=/dev/mmcblk0 bs=512 seek=2 conv=notrunc  
+
+## BOARD CONFIG :
+DEBUG Port - GND-RXD-TXD
+
+###Switch Configuration
+Serial Download - D1,D5 - OFF
+eMMC - D2, D5 - OFF
+SD - D2, D4,D5,D7 - OFF
+uSD -
+
+## COMMANDS :
+ext4ls mmc 0:1 zImage  <-- list file
+setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk1p2  init=/bin/sh debug=7
+
+setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk1p2 debug=7
+
+ext4load mmc 0:1 10800000 zImage;ext4load mmc 0:1 16800000 imx6dl-riotboard.dtb;bootz 10800000 - 16800000
+
+## SDCARD PREPARATION :
+fdisk /dev/mmcblk0
+sudo mkfs.ext4 -F -L linuxroot /dev/mmcblk0p2
+sudo mkfs.ext4 -F -L boot /dev/mmcblk0p1
+sudo mount /dev/mmcblk0p1 /home/vibi/RIoT/mmcblk0p1
+sudo mount /dev/mmcblk0p2  /home/vibi/RIoT/mnt
+
+## Building Linux Kernel :
+cd linux
+mkdir build_riot
+make -j4 O=$PWD/build_riot imx_v6_v7_defconfig
+make -j4 O=$PWD/build_riot menuconfig
+make -j16 O=$PWD/build_riot bzImage
+#make -j16 O=$PWD/build_riot uImage
+make -j16 O=$PWD/build_riot dtbs
+cd  build_riot
+sudo cp arch/arm/boot/dts/imx6dl-riotboard.dtb /home/vibi/RIoT/mmcblk0p1
+sudo cp arch/arm/boot/zImage /home/vibi/RIoT/mmcblk0p1
+
+make -j16 O=$PWD/build_riot mnt modules
+sudo make -j16 O=$PWD/build_riot INSTALL_MOD_PATH=/home/vibi/RIoT/mnt modules_install
+
+## RFS :
+sudo /dev/mmcblkop2 ./mnt 
+cd mnt 
+sudo tar -xvf ../ubuntu-base-20.04.2-base-armhf.tar.gz
+sudo cp /usr/bin/qemu-arm-static usr/bin
+sudo modprobe binfmt_misc
+sudo mkdir dev/pts
+sudo mount -t devpts devpts dev/pts
+sudo mount -t proc proc proc
+sudo mount -t sysfs sysfs sys
+sudo cp /etc/resolv.conf etc/resolv.conf
+cd ../
+sudo chroot mnt
+rm /bin/sh && ln -s /bin/bash /bin/sh
+
+apt update
+apt upgrade 
+apt install ssh vim-tiny
+sync
+vim /etc/ssh/sshd_config <-- change port number
+cd /lib/systemd/system
+sudo cp serial-getty@.service serial-getty@ttymxc1.service
+cd getty.target.wants/
+sudo ln -s ../serial-getty@ttymxc1.service serial-getty@ttymxc1.service
+sync
+
+systemctl set-default multi-user.target
+
+exit
+
+
+## QEMU (CHECKING RFS USING REALVIEW KERNEL IN PC) :
+
+mkdir build_realview
+make O=./build_realview realview_defconfig
+make O=./build_realview menuconfig
+Select autofs4, cgroups, tmpfs, devtmpfs
+
+make O=./build_realview -j32 bzImage
+make O=./build_realview -j32 dtbs
+
+cd build_realview
+
+qemu-system-arm -M realview-pbx-a9 -kernel build_realview/arch/arm/boot/zImage -dtb build_realview/arch/arm/boot/dts/arm-realview-pbx-a9.dtb -nographic -append "root=/dev/nfs nfsroot=10.0.2.2:/home/vibi/RIoT/nfs_root,vers=3 ip=dhcp console=ttyAMA0 mem=128M debug=8"
+
+export BUILD_DIR=/home/vibi/work/linuxkernel/linux/build_realview
+
+qemu-system-arm -M realview-pbx-a9 -kernel ${BUILD_DIR}/arch/arm/boot/zImage -dtb ${BUILD_DIR}/arch/arm/boot/dts/arm-realview-pbx-a9.dtb -nographic -append "root=/dev/sda console=ttyAMA0 mem=128M debug=8"
+
+http://www.hotmcu.com/wiki/How_to_make_a_customize_ubuntu_rootfs_image
+https://a-delacruz.github.io/ubuntu/rpi3-setup-filesystem.html
+
+
