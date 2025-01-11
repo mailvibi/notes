@@ -41,7 +41,7 @@ sudo mkfs.ext4 -F -L linuxroot /dev/mmcblk0p2
 sudo mkfs.ext4 -F -L boot /dev/mmcblk0p1
 sudo mount /dev/mmcblk0p1 /home/vibi/RIoT/mmcblk0p1
 sudo mount /dev/mmcblk0p2  /home/vibi/RIoT/mnt
-
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## Building Linux Kernel :
 cd linux
 mkdir build_riot
@@ -57,6 +57,22 @@ sudo cp arch/arm/boot/zImage /home/vibi/RIoT/mmcblk0p1
 make -j16 O=$PWD/build_riot mnt modules
 sudo make -j16 O=$PWD/build_riot INSTALL_MOD_PATH=/home/vibi/RIoT/mnt modules_install
 
+BUILD SCRIPT
+
+#!/bin/bash
+export RIOT_BUILD_DIR="/home/sa/p/linux/linux/build_riot"
+if [ ! -d ${RIOT_BUILD_DIR} ] ; then
+	echo "Creating Build Dir ${RIOT_BUILD_DIR}"
+	mkdir ${RIOT_BUILD_DIR}
+fi
+
+make -j4 O=${RIOT_BUILD_DIR} imx_v6_v7_defconfig
+make -j4 O=${RIOT_BUILD_DIR} menuconfig
+make -j16 O=${RIOT_BUILD_DIR} bzImage
+#make -j16 O=${RIOT_BUILD_DIR} uImage
+make -j16 O=${RIOT_BUILD_DIR} dtbs
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## RFS :
 sudo /dev/mmcblkop2 ./mnt 
 cd mnt 
