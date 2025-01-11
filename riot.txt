@@ -1,12 +1,14 @@
 RIOT BOARD SETUP
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+UBOOT COMPILATION
 
 export ARCH=arm
-export CROSS_COMPILE=arm-linux-gnueabihf-
-export PATH=$PATH:/home/vibi/work/crosscompiler/gcc-linaro-6.3.1-2017.02-x86_64_arm-linux-gnueabihf
+export CROSS_COMPILE=arm-none-linux-gnueabihf-
+export PATH=/home/sa/p/cc/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-linux-gnueabihf/bin:$PATH
 
 ## U-BOOT COMPILATION
 make riotboard_defconfig 
-make u-boot.imx
+make -j4 u-boot.imx
 
 dd if=u-boot.imx of=sdcard.img bs=512 seek=2 conv=notrunc  
 dd if=u-boot.imx of=/dev/mmcblk0 bs=512 seek=2 conv=notrunc  
@@ -19,7 +21,7 @@ Serial Download - D1,D5 - OFF
 eMMC - D2, D5 - OFF
 SD - D2, D4,D5,D7 - OFF
 uSD -
-
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## COMMANDS :
 ext4ls mmc 0:1 zImage  <-- list file
 setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk1p2  init=/bin/sh debug=7
@@ -34,6 +36,7 @@ ext4load mmc 0:1 10800000 zImage;ext4load mmc 0:1 16800000 imx6dl-riotboard.dtb;
 setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk2p4 init=/bin/ash debug=7
 ext4load mmc 0:1 10800000 /boot/zImage;ext4load mmc 0:1 16800000 /boot/imx6dl-riotboard.dtb;bootz 10800000 - 16800000
 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ## SDCARD PREPARATION :
 fdisk /dev/mmcblk0
@@ -91,6 +94,20 @@ sudo umount ${MMC_DEVICE}
 rm -rf ${TMP_MMC_MNT_DIR}
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## LINUX KERNEL AND DTB TO BUILDROOT IMAGE RFS
+
+sudo mount -o loop rootfs.ext2 o
+if [ ! -d "o/boot" ] ; then
+	sudo mkdir "o/boot"
+fi
+sudo cp /home/sa/p/linux/linux/build_riot/arch/arm/boot/dts/nxp/imx/imx6dl-riotboard.dtb o/boot/
+sudo cp /home/sa/p/linux/linux/build_riot/arch/arm/boot/zImage o/boot/
+sync
+sudo umount o
+
+sudo dd if=rootfs.ext2 of=/dev/sdc1
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 ## RFS :
 sudo /dev/mmcblkop2 ./mnt 
 cd mnt 
@@ -121,7 +138,7 @@ systemctl set-default multi-user.target
 
 exit
 
-
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## QEMU (CHECKING RFS USING REALVIEW KERNEL IN PC) :
 
 mkdir build_realview
