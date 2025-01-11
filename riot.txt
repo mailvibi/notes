@@ -60,6 +60,8 @@ sudo make -j16 O=$PWD/build_riot INSTALL_MOD_PATH=/home/vibi/RIoT/mnt modules_in
 ========================= BUILD SCRIPT =============================
 
 #!/bin/bash
+export LINUX_SRC_DIR=/home/sa/p/linux/linux
+cd ${LINUX_SRC_DIR}
 
 export ARCH=arm
 export CROSS_COMPILE=arm-none-linux-gnueabihf-
