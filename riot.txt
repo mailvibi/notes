@@ -31,7 +31,7 @@ setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk2p3 debug=7
 ext4load mmc 0:1 10800000 zImage;ext4load mmc 0:1 16800000 imx6dl-riotboard.dtb;bootz 10800000 - 16800000
 
 
-setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk2p4 inti=/linuxrc debug=7
+setenv bootargs console=ttymxc1,115200 root=/dev/mmcblk2p4 init=/bin/ash debug=7
 ext4load mmc 0:1 10800000 /boot/zImage;ext4load mmc 0:1 16800000 /boot/imx6dl-riotboard.dtb;bootz 10800000 - 16800000
 
 
