@@ -57,9 +57,14 @@ sudo cp arch/arm/boot/zImage /home/vibi/RIoT/mmcblk0p1
 make -j16 O=$PWD/build_riot mnt modules
 sudo make -j16 O=$PWD/build_riot INSTALL_MOD_PATH=/home/vibi/RIoT/mnt modules_install
 
-BUILD SCRIPT
+========================= BUILD SCRIPT =============================
 
 #!/bin/bash
+
+export ARCH=arm
+export CROSS_COMPILE=arm-none-linux-gnueabihf-
+export PATH=/home/sa/p/cc/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-linux-gnueabihf/bin:$PATH
+
 export RIOT_BUILD_DIR="/home/sa/p/linux/linux/build_riot"
 if [ ! -d ${RIOT_BUILD_DIR} ] ; then
 	echo "Creating Build Dir ${RIOT_BUILD_DIR}"
